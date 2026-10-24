@@ -1,0 +1,29 @@
+name: Bug report
+description: Something is missing, wrong or crashes
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you expect to see instead?
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system and version
+      placeholder: Windows 11 Pro 24H2
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: PC Diag version
+      description: Shown in the About dialog or with `pcdiag -version`
+  - type: textarea
+    id: report
+    attributes:
+      label: Report
+      description: Paste the relevant part of the report (Copy report button). Remove anything you do not want to make public, such as serial numbers or host names.
+      render: text

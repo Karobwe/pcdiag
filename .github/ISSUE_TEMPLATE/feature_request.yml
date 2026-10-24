@@ -1,0 +1,16 @@
+name: Feature request
+description: Suggest information or a check that would help diagnose a workstation
+labels: [enhancement]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What would you like to see?
+      description: Which information or check, and in which troubleshooting situation it helps.
+    validations:
+      required: true
+  - type: textarea
+    id: how
+    attributes:
+      label: How can it be collected?
+      description: Command, API or file that provides the information on each OS, if you know it.

@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: stable
+
+      - name: Install Fyne system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc libgl1-mesa-dev xorg-dev libwayland-dev libxkbcommon-dev
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        if: runner.os != 'Linux'
+        run: go test ./...
+
+      - name: Test (race + coverage)
+        if: runner.os == 'Linux'
+        run: go test -race -coverprofile=coverage.out ./...
+
+      - name: Build
+        run: go build -trimpath -o dist/ .
+
+      - name: Smoke test (command-line report)
+        shell: bash
+        run: |
+          ./dist/pcdiag* -report text -no-checks
+          ./dist/pcdiag* -report json -no-checks -o report.json
+          test -s report.json
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: stable
+      - name: Install Fyne system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc libgl1-mesa-dev xorg-dev libwayland-dev libxkbcommon-dev
+      - name: Check formatting and go.mod
+        run: |
+          test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
+          go mod tidy -diff
+      - uses: golangci/golangci-lint-action@v8
+        with:
+          version: latest

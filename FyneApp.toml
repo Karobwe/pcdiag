@@ -1,0 +1,14 @@
+Website = "https://github.com/Karobwe/pcdiag"
+
+[Details]
+Icon = "Icon.png"
+Name = "PC Diag"
+ID = "io.github.karobwe.pcdiag"
+Version = "0.1.0"
+Build = 2
+
+[LinuxAndBSD]
+GenericName = "Workstation diagnostics"
+Categories = ["System", "Network", "Monitor"]
+Comment = "Information a helpdesk needs to troubleshoot a workstation"
+Keywords = ["diagnostics", "helpdesk", "network", "printer", "support"]

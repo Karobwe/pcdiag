@@ -1,0 +1,86 @@
+name: Release
+
+# Push a tag such as v1.2.3 to build the packages and publish a GitHub release.
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    name: Package (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: windows
+          - os: macos-latest
+            target: darwin
+          - os: ubuntu-latest
+            target: linux
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: stable
+
+      - name: Install Fyne system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc libgl1-mesa-dev xorg-dev libwayland-dev libxkbcommon-dev
+
+      - name: Install the fyne CLI
+        run: go install fyne.io/tools/cmd/fyne@latest
+
+      - name: Package
+        env:
+          GOFLAGS: -ldflags=-X=main.version=${{ github.ref_name }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          fyne package --os ${{ matrix.target }} --release --app-version "$VERSION" --app-build ${{ github.run_number }}
+          mkdir dist
+          case "${{ matrix.target }}" in
+            windows)
+              mv "PC Diag.exe" pcdiag.exe
+              7z a "dist/pcdiag_${VERSION}_windows_amd64.zip" pcdiag.exe pcdiag.example.json README.md LICENSE ;;
+            darwin)
+              ditto -c -k --keepParent "PC Diag.app" "dist/pcdiag_${VERSION}_darwin_$(uname -m).zip" ;;
+            linux)
+              mv "PC Diag.tar.xz" "dist/pcdiag_${VERSION}_linux_amd64.tar.xz" ;;
+          esac
+          ls -la dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pcdiag-${{ matrix.target }}
+          path: dist/*
+          if-no-files-found: error
+
+  release:
+    name: Publish release
+    needs: package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Checksums
+        run: cd dist && sha256sum * > checksums.txt
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
+          # Keep the notes of a release that already exists for this tag.
+          append_body: true

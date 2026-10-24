@@ -1,0 +1,25 @@
+{
+  "support": {
+    "name": "IT Service Desk",
+    "phone": "+33 1 23 45 67 89",
+    "email": "helpdesk@example.com",
+    "url": "https://support.example.com"
+  },
+  "connectivity": {
+    "dnsTestHost": "www.microsoft.com",
+    "internetTcp": "1.1.1.1:443",
+    "httpUrl": "http://www.msftconnecttest.com/connecttest.txt",
+    "httpExpect": "Microsoft Connect Test",
+    "checks": [
+      { "name": "Domain controller", "type": "tcp",  "target": "dc01.corp.example.com:389" },
+      { "name": "File server",       "type": "tcp",  "target": "fs01.corp.example.com:445" },
+      { "name": "Intranet",          "type": "http", "target": "https://intranet.corp.example.com/" },
+      { "name": "Internal DNS",      "type": "dns",  "target": "intranet.corp.example.com", "server": "10.0.0.10" },
+      { "name": "Print server",      "type": "ping", "target": "print01.corp.example.com" }
+    ]
+  },
+  "thresholds": {
+    "memoryPercent": 90,
+    "diskPercent": 90
+  }
+}
