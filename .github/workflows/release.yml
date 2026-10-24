@@ -1,16 +1,54 @@
 name: Release
 
-# Push a tag such as v1.2.3 to build the packages and publish a GitHub release.
+# Two ways to publish a release:
+#   - push a tag such as v1.2.3, or
+#   - run this workflow manually (Actions > Release > Run workflow) with a
+#     version: the workflow then creates the tag on the selected commit itself.
 on:
   push:
     tags: ["v*.*.*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, e.g. v0.1.0 (the tag is created if it does not exist)"
+        required: true
+        type: string
+      prerelease:
+        description: "Mark as pre-release"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ inputs.version || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  TAG: ${{ inputs.version || github.ref_name }}
+
 jobs:
+  prepare:
+    name: Validate version
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.v.outputs.tag }}
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - id: v
+        shell: bash
+        run: |
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::'$TAG' is not a semantic version tag such as v1.2.3"
+            exit 1
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+
   package:
     name: Package (${{ matrix.os }})
+    needs: prepare
     strategy:
       fail-fast: false
       matrix:
@@ -25,6 +63,8 @@ jobs:
     defaults:
       run:
         shell: bash
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
     steps:
       - uses: actions/checkout@v5
 
@@ -43,10 +83,10 @@ jobs:
 
       - name: Package
         env:
-          GOFLAGS: -ldflags=-X=main.version=${{ github.ref_name }}
+          GOFLAGS: -ldflags=-X=main.version=${{ needs.prepare.outputs.tag }}
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          fyne package --os ${{ matrix.target }} --release --app-version "$VERSION" --app-build ${{ github.run_number }}
+          # fyne only accepts numeric versions (x.y.z) in the package metadata.
+          fyne package --os ${{ matrix.target }} --release --app-version "${VERSION%%-*}" --app-build ${{ github.run_number }}
           mkdir dist
           case "${{ matrix.target }}" in
             windows)
@@ -67,20 +107,52 @@ jobs:
 
   release:
     name: Publish release
-    needs: package
+    needs: [prepare, package]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v5
+
       - uses: actions/download-artifact@v4
         with:
           path: dist
           merge-multiple: true
 
       - name: Checksums
-        run: cd dist && sha256sum * > checksums.txt
+        run: cd dist && sha256sum * > checksums.txt && cat checksums.txt
+
+      - name: Release notes from CHANGELOG.md
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          # Extract the "## [x.y.z]" section of the changelog, if any.
+          awk -v v="$VERSION" '
+            $0 ~ "^## \\[" v "\\]" { found=1; next }
+            found && /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md > notes.md
+          cat >> notes.md <<'EOF'
+
+          ### Downloads
+
+          | Platform | File |
+          | --- | --- |
+          | Windows 10/11 (x64) | `pcdiag_<v>_windows_amd64.zip`: unzip and run `pcdiag.exe` (no installation or admin rights needed) |
+          | macOS | `pcdiag_<v>_darwin_arm64.zip`: unzip and move *PC Diag.app* to Applications |
+          | Linux (x64) | `pcdiag_<v>_linux_amd64.tar.xz`: extract and run `sudo make install` |
+
+          The binaries are not code-signed: Windows SmartScreen or macOS Gatekeeper may ask for confirmation on first launch.
+          Verify downloads against `checksums.txt` (SHA-256).
+          EOF
+          sed -i "s/<v>/$VERSION/g" notes.md
+          cat notes.md
 
       - uses: softprops/action-gh-release@v2
         with:
-          files: dist/*
+          tag_name: ${{ needs.prepare.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: PC Diag ${{ needs.prepare.outputs.tag }}
+          body_path: notes.md
           generate_release_notes: true
-          # Keep the notes of a release that already exists for this tag.
-          append_body: true
+          prerelease: ${{ inputs.prerelease || contains(needs.prepare.outputs.tag, '-') }}
+          files: dist/*
+          fail_on_unmatched_files: true

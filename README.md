@@ -174,13 +174,18 @@ reattaches to the console it was started from.
 
 ### Releasing
 
-Pushing a tag such as `v1.2.3` runs the [release workflow](.github/workflows/release.yml), which packages
-the application on Windows, macOS and Linux and publishes a GitHub release with the archives
-(`pcdiag_<version>_<os>_<arch>`) and a `checksums.txt` file (SHA-256).
+The [release workflow](.github/workflows/release.yml) packages the application on Windows, macOS and Linux
+and publishes a GitHub release with the archives (`pcdiag_<version>_<os>_<arch>`), a `checksums.txt` file
+(SHA-256) and the notes of the matching `CHANGELOG.md` section. Start it in either way:
 
-```bash
-git tag -a v0.1.0 -m "v0.1.0" && git push origin v0.1.0
-```
+- **From GitHub**: *Actions › Release › Run workflow*, enter the version (for example `v0.2.0`). The
+  workflow creates the tag on the selected branch itself. With the GitHub CLI:
+  `gh workflow run release.yml -f version=v0.2.0`.
+- **From git**, by pushing a tag:
+
+  ```bash
+  git tag -a v0.2.0 -m "v0.2.0" && git push origin v0.2.0
+  ```
 
 ## Project layout
 

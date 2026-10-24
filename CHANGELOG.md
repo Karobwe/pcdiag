@@ -18,7 +18,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Plain-text and JSON reports: copy to clipboard, save to file, or `-report` command-line mode.
 - Optional `pcdiag.json` configuration: support contact, checks and thresholds.
 - English and French translations.
-- CI on Windows, macOS and Linux; tagged releases packaged with the fyne CLI.
+- CI on Windows, macOS and Linux; releases packaged with the fyne CLI, started by a tag or manually from GitHub Actions.
 
 [Unreleased]: https://github.com/Karobwe/pcdiag/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/Karobwe/pcdiag/releases/tag/v0.1.0
