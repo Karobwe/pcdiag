@@ -128,6 +128,7 @@ jobs:
           awk -v v="$VERSION" '
             $0 ~ "^## \\[" v "\\]" { found=1; next }
             found && /^## \[/ { exit }
+            found && /^\[[^]]+\]: / { next }   # skip link reference definitions
             found { print }
           ' CHANGELOG.md > notes.md
           cat >> notes.md <<'EOF'
