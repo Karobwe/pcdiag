@@ -6,9 +6,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-25
+
 ### Added
 
-- The standalone Windows executable is published next to the archive in each release.
+- The standalone Windows executable (`pcdiag_<version>_windows_amd64.exe`) is published next to the
+  archive, for a direct download.
+
+### Changed
+
+- Releases can be published from GitHub Actions (*Run workflow* with a version) as well as by pushing a tag.
 
 ## [0.1.0] - 2026-10-24
 
@@ -24,5 +31,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - English and French translations.
 - CI on Windows, macOS and Linux; releases packaged with the fyne CLI, started by a tag or manually from GitHub Actions.
 
-[Unreleased]: https://github.com/Karobwe/pcdiag/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/Karobwe/pcdiag/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/Karobwe/pcdiag/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/Karobwe/pcdiag/releases/tag/v0.1.0
