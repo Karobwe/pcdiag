@@ -34,7 +34,14 @@ Les rapports restent volontairement en anglais pour pouvoir être lus par n'impo
 ## Installation
 
 Téléchargez l'archive correspondant à votre système sur la page
-[Releases](https://github.com/Karobwe/pcdiag/releases). Sous Windows, téléchargez `pcdiag_<version>_windows_amd64.exe` et lancez-le directement, ou prenez l'archive `.zip` qui contient aussi un exemple de configuration `pcdiag.json`
+[Releases](https://github.com/Karobwe/pcdiag/releases). Sous Windows, téléchargez `pcdiag_<version>_windows_amd64.exe` et lancez-le directement, ou prenez l'archive `.zip` qui contient aussi un exemple de configuration `pcdiag.json`.
+Pour un déploiement sur un parc (GPO, Intune, SCCM), utilisez `pcdiag_<version>_windows_amd64.msi` :
+
+```powershell
+msiexec /i pcdiag_0.2.0_windows_amd64.msi /qn CONFIGFILE="\\serveur\partage\pcdiag.json" DESKTOPSHORTCUT=1
+```
+
+Voir la section [Deploying with the MSI](README.md#deploying-with-the-msi)
 (l'exécutable n'étant pas signé, SmartScreen peut demander une confirmation au premier lancement).
 
 ## Compiler

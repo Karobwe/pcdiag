@@ -6,6 +6,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Added
+
+- MSI installer (`pcdiag_<version>_windows_amd64.msi`) for deployment with Group Policy, Intune or
+  Configuration Manager, with `CONFIGFILE` and `DESKTOPSHORTCUT` properties. It is built and tested by
+  a silent install / uninstall in CI.
+
 ## [0.1.1] - 2026-10-25
 
 ### Added

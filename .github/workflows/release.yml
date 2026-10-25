@@ -107,7 +107,11 @@ jobs:
               mv "PC Diag.exe" pcdiag.exe
               7z a "dist/pcdiag_${VERSION}_windows_amd64.zip" pcdiag.exe pcdiag.example.json README.md LICENSE
               # Standalone executable for a direct download.
-              cp pcdiag.exe "dist/pcdiag_${VERSION}_windows_amd64.exe" ;;
+              cp pcdiag.exe "dist/pcdiag_${VERSION}_windows_amd64.exe"
+              # MSI for deployment (GPO, Intune, SCCM...), checked by a silent install / uninstall.
+              pwsh -NoProfile -File packaging/windows/build-msi.ps1 -Exe pcdiag.exe \
+                -Version "${VERSION%%-*}" -Output "dist/pcdiag_${VERSION}_windows_amd64.msi"
+              pwsh -NoProfile -File packaging/windows/test-msi.ps1 -Msi "dist/pcdiag_${VERSION}_windows_amd64.msi" ;;
             darwin)
               ditto -c -k --keepParent "PC Diag.app" "dist/pcdiag_${VERSION}_darwin_$(uname -m).zip" ;;
             linux)
@@ -157,6 +161,7 @@ jobs:
           | --- | --- |
           | Windows 10/11 (x64) | `pcdiag_<v>_windows_amd64.exe`: the executable alone, run it directly (no installation or admin rights needed) |
           | Windows 10/11 (x64) | `pcdiag_<v>_windows_amd64.zip`: executable + sample `pcdiag.json` configuration, README and license |
+          | Windows, managed deployment | `pcdiag_<v>_windows_amd64.msi`: per-machine installer for GPO / Intune / SCCM, e.g. `msiexec /i pcdiag_<v>_windows_amd64.msi /qn CONFIGFILE="\\server\share\pcdiag.json"` |
           | macOS | `pcdiag_<v>_darwin_arm64.zip`: unzip and move *PC Diag.app* to Applications |
           | Linux (x64) | `pcdiag_<v>_linux_amd64.tar.xz`: extract and run `sudo make install` |
 

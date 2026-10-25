@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Windows Installer package for PC Diag (WiX Toolset v5).
+  Built by packaging/windows/build-msi.ps1, see "Deploying with the MSI" in README.md.
+
+  Public properties (msiexec ... PROPERTY=value):
+    CONFIGFILE       Full path (local or UNC) of a pcdiag.json copied next to the executable.
+                     It is remembered and copied again on upgrade or repair.
+    DESKTOPSHORTCUT  Set to 1 to add a shortcut on the public desktop.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="PC Diag"
+           Manufacturer="Karobwe"
+           Version="$(var.Version)"
+           UpgradeCode="dfa457df-3079-4abf-9c95-c56ed72aeb9d"
+           Scope="perMachine"
+           Language="1033"
+           Compressed="yes">
+
+    <SummaryInformation Description="PC Diag $(var.Version) - workstation diagnostics for helpdesks" />
+
+    <!-- Installing a newer version replaces the previous one; downgrades are refused. -->
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- Add/Remove Programs -->
+    <Icon Id="AppIcon" SourceFile="$(var.IconFile)" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/Karobwe/pcdiag" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/Karobwe/pcdiag/issues" />
+    <Property Id="ARPNOMODIFY" Value="1" />
+
+    <!-- CONFIGFILE given on the command line wins; otherwise reuse the value saved at install. -->
+    <Property Id="CONFIGFILE" Secure="yes" />
+    <Property Id="SAVEDCONFIGFILE" Secure="yes">
+      <RegistrySearch Id="SavedConfigFile" Root="HKLM" Key="Software\PC Diag" Name="ConfigFile" Type="raw" Bitness="always64" />
+    </Property>
+    <SetProperty Id="CONFIGFILE" Value="[SAVEDCONFIGFILE]" After="AppSearch" Sequence="first"
+                 Condition="NOT CONFIGFILE AND SAVEDCONFIGFILE" />
+    <Property Id="DESKTOPSHORTCUT" Secure="yes" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="PC Diag">
+
+        <Component Id="MainExecutable" Bitness="always64">
+          <File Id="PcdiagExe" Source="$(var.ExeFile)" Name="pcdiag.exe" KeyPath="yes" />
+          <!-- The configuration copied from CONFIGFILE is not part of the package: remove it explicitly. -->
+          <RemoveFile Id="RemoveConfig" Name="pcdiag.json" On="uninstall" />
+        </Component>
+
+        <Component Id="Documentation" Bitness="always64">
+          <File Id="ExampleConfig" Source="$(var.SourceDir)\pcdiag.example.json" KeyPath="yes" />
+          <File Id="License" Source="$(var.SourceDir)\LICENSE" Name="LICENSE.txt" />
+        </Component>
+
+        <Component Id="Configuration" Condition="CONFIGFILE" Bitness="always64">
+          <RegistryValue Root="HKLM" Key="Software\PC Diag" Name="ConfigFile" Type="string" Value="[CONFIGFILE]" KeyPath="yes" />
+          <CopyFile Id="CopyConfig" SourceProperty="CONFIGFILE" DestinationDirectory="INSTALLFOLDER" DestinationName="pcdiag.json" />
+        </Component>
+
+      </Directory>
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Component Id="StartMenuShortcut" Bitness="always64">
+        <Shortcut Id="StartMenuShortcut" Name="PC Diag" Description="Workstation diagnostics"
+                  Target="[INSTALLFOLDER]pcdiag.exe" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon" />
+        <RegistryValue Root="HKLM" Key="Software\PC Diag" Name="StartMenuShortcut" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </StandardDirectory>
+
+    <StandardDirectory Id="DesktopFolder">
+      <Component Id="DesktopShortcut" Condition="DESKTOPSHORTCUT = 1" Bitness="always64">
+        <Shortcut Id="DesktopShortcut" Name="PC Diag" Description="Workstation diagnostics"
+                  Target="[INSTALLFOLDER]pcdiag.exe" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon" />
+        <RegistryValue Root="HKLM" Key="Software\PC Diag" Name="DesktopShortcut" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </StandardDirectory>
+
+    <Feature Id="Main" Title="PC Diag" Level="1">
+      <ComponentRef Id="MainExecutable" />
+      <ComponentRef Id="Documentation" />
+      <ComponentRef Id="Configuration" />
+      <ComponentRef Id="StartMenuShortcut" />
+      <ComponentRef Id="DesktopShortcut" />
+    </Feature>
+  </Package>
+</Wix>
