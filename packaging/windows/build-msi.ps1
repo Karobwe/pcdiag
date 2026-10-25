@@ -20,20 +20,31 @@ $ErrorActionPreference = 'Stop'
 $WixVersion = '5.0.2'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 
+# Report errors as GitHub Actions annotations when running in CI.
+function Fail([string] $message, [string[]] $details) {
+    if ($env:GITHUB_ACTIONS) {
+        foreach ($line in $details) { if ($line -match 'error|warning|exception') { Write-Host "::error::$line" } }
+    }
+    throw $message
+}
+
 if (-not (Get-Command wix -ErrorAction SilentlyContinue)) {
-    dotnet tool install --global wix --version $WixVersion
+    $out = dotnet tool install --global wix --version $WixVersion 2>&1 | ForEach-Object { "$_" }
+    $out | Out-Host
+    if ($LASTEXITCODE -ne 0) { Fail 'Unable to install the WiX tool' $out }
     $env:PATH += [IO.Path]::PathSeparator + (Join-Path $HOME '.dotnet\tools')
 }
 
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $Output) | Out-Null
 
-wix build (Join-Path $PSScriptRoot 'pcdiag.wxs') `
+$out = wix build (Join-Path $PSScriptRoot 'pcdiag.wxs') `
     -arch x64 `
     -d "Version=$Version" `
     -d "ExeFile=$((Resolve-Path $Exe).Path)" `
     -d "IconFile=$(Join-Path $root 'assets\icon.ico')" `
     -d "SourceDir=$root" `
-    -o $Output
-if ($LASTEXITCODE -ne 0) { throw "wix build failed with exit code $LASTEXITCODE" }
+    -o $Output 2>&1 | ForEach-Object { "$_" }
+$out | Out-Host
+if ($LASTEXITCODE -ne 0) { Fail "wix build failed with exit code $LASTEXITCODE" $out }
 
 Write-Host "Built $Output"
