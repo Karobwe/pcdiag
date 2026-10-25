@@ -36,6 +36,10 @@ if (-not (Get-Command wix -ErrorAction SilentlyContinue)) {
 }
 
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $Output) | Out-Null
+# Build in a temporary folder: WiX also writes a .wixpdb debug file that must not be distributed.
+$work = Join-Path ([IO.Path]::GetTempPath()) ("pcdiag-msi-" + [guid]::NewGuid())
+New-Item -ItemType Directory -Path $work | Out-Null
+$msi = Join-Path $work 'pcdiag.msi'
 
 $out = wix build (Join-Path $PSScriptRoot 'pcdiag.wxs') `
     -arch x64 `
@@ -43,8 +47,10 @@ $out = wix build (Join-Path $PSScriptRoot 'pcdiag.wxs') `
     -d "ExeFile=$((Resolve-Path $Exe).Path)" `
     -d "IconFile=$(Join-Path $root 'assets\icon.ico')" `
     -d "SourceDir=$root" `
-    -o $Output 2>&1 | ForEach-Object { "$_" }
+    -o $msi 2>&1 | ForEach-Object { "$_" }
 $out | Out-Host
 if ($LASTEXITCODE -ne 0) { Fail "wix build failed with exit code $LASTEXITCODE" $out }
 
+Move-Item -Force $msi $Output
+Remove-Item -Recurse -Force $work
 Write-Host "Built $Output"
