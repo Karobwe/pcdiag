@@ -48,9 +48,13 @@
           <RemoveFile Id="RemoveConfig" Name="pcdiag.json" On="uninstall" />
         </Component>
 
-        <Component Id="Documentation" Bitness="always64">
+        <!-- One component per unversioned file, so that WiX can generate stable component GUIDs. -->
+        <Component Id="ExampleConfig" Bitness="always64">
           <File Id="ExampleConfig" Source="$(var.SourceDir)\pcdiag.example.json" KeyPath="yes" />
-          <File Id="License" Source="$(var.SourceDir)\LICENSE" Name="LICENSE.txt" />
+        </Component>
+
+        <Component Id="License" Bitness="always64">
+          <File Id="License" Source="$(var.SourceDir)\LICENSE" Name="LICENSE.txt" KeyPath="yes" />
         </Component>
 
         <Component Id="Configuration" Condition="CONFIGFILE" Bitness="always64">
@@ -79,7 +83,8 @@
 
     <Feature Id="Main" Title="PC Diag" Level="1">
       <ComponentRef Id="MainExecutable" />
-      <ComponentRef Id="Documentation" />
+      <ComponentRef Id="ExampleConfig" />
+      <ComponentRef Id="License" />
       <ComponentRef Id="Configuration" />
       <ComponentRef Id="StartMenuShortcut" />
       <ComponentRef Id="DesktopShortcut" />
