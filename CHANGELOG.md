@@ -6,6 +6,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Added
+
+- The standalone Windows executable is published next to the archive in each release.
+
 ## [0.1.0] - 2026-10-24
 
 ### Added

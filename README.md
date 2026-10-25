@@ -42,8 +42,9 @@ produces a report that can be pasted into a ticket.
 
 Download the archive for your platform from the [Releases](https://github.com/Karobwe/pcdiag/releases) page:
 
-- **Windows**: unzip `pcdiag_<version>_windows_amd64.zip` and run `pcdiag.exe`. The executable is not signed:
-  Windows SmartScreen may ask for a confirmation the first time.
+- **Windows**: download `pcdiag_<version>_windows_amd64.exe` and run it directly, or download
+  `pcdiag_<version>_windows_amd64.zip`, which also contains a sample `pcdiag.json` configuration. The
+  executable is not signed: Windows SmartScreen may ask for a confirmation the first time.
 - **macOS**: unzip and move *PC Diag.app* to *Applications*. As the app is not notarized, open it with
   right-click › *Open* the first time.
 - **Linux**: extract the `.tar.xz` and run `sudo make install`, or run the binary from `usr/local/bin`.

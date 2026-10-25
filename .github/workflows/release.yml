@@ -35,9 +35,12 @@ jobs:
     outputs:
       tag: ${{ steps.v.outputs.tag }}
       version: ${{ steps.v.outputs.version }}
+      ref: ${{ steps.v.outputs.ref }}
     steps:
       - id: v
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
             echo "::error::'$TAG' is not a semantic version tag such as v1.2.3"
@@ -45,6 +48,15 @@ jobs:
           fi
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+          # Re-running an existing release rebuilds it from its tag, not from
+          # the branch head, so the published binaries match the tagged code.
+          if sha=$(gh api "repos/$GITHUB_REPOSITORY/commits/$TAG" --jq .sha 2>/dev/null); then
+            echo "Tag $TAG exists ($sha): rebuilding it"
+            echo "ref=$sha" >> "$GITHUB_OUTPUT"
+          else
+            echo "Tag $TAG will be created on $GITHUB_SHA"
+            echo "ref=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+          fi
 
   package:
     name: Package (${{ matrix.os }})
@@ -67,6 +79,8 @@ jobs:
       VERSION: ${{ needs.prepare.outputs.version }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
 
       - uses: actions/setup-go@v6
         with:
@@ -91,7 +105,9 @@ jobs:
           case "${{ matrix.target }}" in
             windows)
               mv "PC Diag.exe" pcdiag.exe
-              7z a "dist/pcdiag_${VERSION}_windows_amd64.zip" pcdiag.exe pcdiag.example.json README.md LICENSE ;;
+              7z a "dist/pcdiag_${VERSION}_windows_amd64.zip" pcdiag.exe pcdiag.example.json README.md LICENSE
+              # Standalone executable for a direct download.
+              cp pcdiag.exe "dist/pcdiag_${VERSION}_windows_amd64.exe" ;;
             darwin)
               ditto -c -k --keepParent "PC Diag.app" "dist/pcdiag_${VERSION}_darwin_$(uname -m).zip" ;;
             linux)
@@ -111,6 +127,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
 
       - uses: actions/download-artifact@v4
         with:
@@ -137,7 +155,8 @@ jobs:
 
           | Platform | File |
           | --- | --- |
-          | Windows 10/11 (x64) | `pcdiag_<v>_windows_amd64.zip`: unzip and run `pcdiag.exe` (no installation or admin rights needed) |
+          | Windows 10/11 (x64) | `pcdiag_<v>_windows_amd64.exe`: the executable alone, run it directly (no installation or admin rights needed) |
+          | Windows 10/11 (x64) | `pcdiag_<v>_windows_amd64.zip`: executable + sample `pcdiag.json` configuration, README and license |
           | macOS | `pcdiag_<v>_darwin_arm64.zip`: unzip and move *PC Diag.app* to Applications |
           | Linux (x64) | `pcdiag_<v>_linux_amd64.tar.xz`: extract and run `sudo make install` |
 
@@ -150,7 +169,7 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.prepare.outputs.tag }}
-          target_commitish: ${{ github.sha }}
+          target_commitish: ${{ needs.prepare.outputs.ref }}
           name: PC Diag ${{ needs.prepare.outputs.tag }}
           body_path: notes.md
           generate_release_notes: true

@@ -34,7 +34,7 @@ Les rapports restent volontairement en anglais pour pouvoir être lus par n'impo
 ## Installation
 
 Téléchargez l'archive correspondant à votre système sur la page
-[Releases](https://github.com/Karobwe/pcdiag/releases). Sous Windows, décompressez puis lancez `pcdiag.exe`
+[Releases](https://github.com/Karobwe/pcdiag/releases). Sous Windows, téléchargez `pcdiag_<version>_windows_amd64.exe` et lancez-le directement, ou prenez l'archive `.zip` qui contient aussi un exemple de configuration `pcdiag.json`
 (l'exécutable n'étant pas signé, SmartScreen peut demander une confirmation au premier lancement).
 
 ## Compiler
