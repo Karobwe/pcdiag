@@ -4,7 +4,7 @@ Website = "https://github.com/Karobwe/pcdiag"
 Icon = "Icon.png"
 Name = "PC Diag"
 ID = "io.github.karobwe.pcdiag"
-Version = "0.1.1"
+Version = "0.2.0"
 Build = 2
 
 [LinuxAndBSD]

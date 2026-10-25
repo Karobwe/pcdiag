@@ -6,16 +6,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-25
+
 ### Added
 
 - MSI installer (`pcdiag_<version>_windows_amd64.msi`) for deployment with Group Policy, Intune or
-  Configuration Manager, with `CONFIGFILE` and `DESKTOPSHORTCUT` properties. It is built and tested by
-  a silent install / uninstall in CI.
-
-## [0.1.1] - 2026-10-25
-
-### Added
-
+  Configuration Manager: per-machine installation, Start menu shortcut, `CONFIGFILE` property to deploy
+  the organization's `pcdiag.json` and `DESKTOPSHORTCUT` property. It is built and tested by a silent
+  install / uninstall in CI.
 - The standalone Windows executable (`pcdiag_<version>_windows_amd64.exe`) is published next to the
   archive, for a direct download.
 
@@ -37,6 +35,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - English and French translations.
 - CI on Windows, macOS and Linux; releases packaged with the fyne CLI, started by a tag or manually from GitHub Actions.
 
-[Unreleased]: https://github.com/Karobwe/pcdiag/compare/v0.1.1...HEAD
-[0.1.1]: https://github.com/Karobwe/pcdiag/compare/v0.1.0...v0.1.1
+[Unreleased]: https://github.com/Karobwe/pcdiag/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/Karobwe/pcdiag/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Karobwe/pcdiag/releases/tag/v0.1.0
